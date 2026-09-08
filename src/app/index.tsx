@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -30,7 +31,7 @@ export default function HomeScreen() {
         <TouchableOpacity 
           style={styles.button}
           activeOpacity={0.4}
-          onPress={() => setmessage("รอสักครู่...")}
+          onPress={() => router.push('./account') }
         >
           <Text style={styles.buttonText}>{message}</Text>
         </TouchableOpacity>
