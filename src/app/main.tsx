@@ -2,30 +2,42 @@
 //import { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 //import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 
 export default function account() {
 
   return (
-    <View style={styles.card}>
+
+    
+
+    <View style={styles.container}>
+
+      <StatusBar
+        style="dark"
+        
+      />
+
+
+      <View style={styles.card}>
           <Text style={styles.title}>TIME MED</Text>
           <Image style={styles.ppkimg} source={require('../../assets/expo.icon/Assets/ppk.png')} />
           <Text style={styles.des}>แอปพลิเคชั่นแจ้งเตือนการกินยา</Text>
+      </View>
     </View>
+    
   );
 }
 
 const styles = StyleSheet.create({
     container: {
-    flex: 1,
-    backgroundColor: '#e3efff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: '#f4c7ff',
+    width: '100%',
+    height: '100%',
     },
     title: {
     fontSize: 25,
     fontWeight: 'bold',
-    color: '#f6c8ff',
+    color: '#eba0fa',
     marginBottom: 0,
     textAlign: 'center',
     position: 'absolute',
@@ -97,7 +109,7 @@ const styles = StyleSheet.create({
     top: 60,
     left:25,
     fontSize: 13,
-    color: '#8d8d8d'
+    color: '#494949'
   },
 
 })

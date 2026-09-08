@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 //import { useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,6 +8,11 @@ export default function account() {
 
   return (
     <SafeAreaView style={styles.container}>
+
+      <StatusBar
+        style="dark"
+        
+      />
 
       <Text style={styles.title}>TIME MED</Text>
 

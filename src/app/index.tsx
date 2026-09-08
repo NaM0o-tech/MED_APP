@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -13,6 +14,11 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+
+      <StatusBar
+        style="dark"
+        
+      />
 
       <Text style={styles.title}>TIME MED</Text>
 
