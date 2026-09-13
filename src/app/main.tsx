@@ -292,6 +292,38 @@ type Medicine = {
           </>
         )}
 
+        {expage === "delmed" && ( 
+          <>
+            <View style={styles.blackcon}>
+              <View style={styles.concard}>
+
+                  <TouchableOpacity 
+                    style={styles.closecon}
+                    onPress={() => {
+                      setexpage("");
+                    }}
+                  >
+                    <Image style={styles.medboxiconimg} source={require("../../assets/images/close.png")}></Image>
+                  </TouchableOpacity>
+
+                  <Text style={styles.areyousure}>คุณแน่ใจหรือไม่?</Text>
+
+                  <TouchableOpacity style={styles.conbut} onPress={() => {
+                    setexpage("");
+                  }}>
+                    <Text style={styles.conbuttext}>ไม่</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.conbut} onPress={() => {
+                    clearAllMedicines();
+                  }}>
+                    <Text style={styles.conbuttext}>ใช่</Text>
+                  </TouchableOpacity>
+              </View>
+            </View>
+          </>
+        )}
+
 
 
 
@@ -350,6 +382,16 @@ type Medicine = {
                   }}
                 > 
                   <Text style={styles.addmedtext}>+ เพิ่มยา</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.delmed}
+                  onPress={() => {
+                    setEditingMedId(null);
+                    setexpage("delmed");
+                  }}
+                > 
+                  <Text style={styles.delmedtext}>ลบยาทั้งหมด</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -794,7 +836,7 @@ type Medicine = {
       alignItems: "center",
 
       position: "absolute",
-      left: 100,
+      left: 20,
       bottom: 100
     },
     addmedtext: {
@@ -893,5 +935,57 @@ type Medicine = {
       color: "#5a7747",
       fontSize: 14,
       fontWeight: 600,
+    },
+
+    delmed: {
+      width: 120,
+      height: 50,
+      backgroundColor: "#ffb2b2",
+
+      borderWidth: 2,
+      borderColor: "#aa7373",
+
+      borderRadius: 10,
+
+      justifyContent: "center",
+      alignItems: "center",
+
+      position: "absolute",
+      left: 20,
+      bottom: 40
+    },
+    delmedtext: {
+      color: "#6b3737",
+      fontSize: 15,
+      fontWeight: 500,
+    },
+
+    areyousure: {
+      color: "#000",
+      fontSize: 20,
+      fontWeight: 600,
+      position: 'absolute',
+      top: 20,
+      left: 20,
+    },
+
+    conbut: {
+      width: 100,
+      height: 80,
+      borderWidth: 1,
+      borderColor: "#000",
+      borderRadius: 10,
+
+      padding: 15,
+      marginBottom: 10,
+      marginTop: 20,
+
+      justifyContent: 'center',
+      alignItems: "center"
+    },
+
+    conbuttext: {
+      color: "#000",
+      fontSize: 15
     }
   });
