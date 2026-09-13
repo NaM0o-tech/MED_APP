@@ -1,8 +1,9 @@
   //import { router } from 'expo-router';
 import { useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
   //import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
@@ -27,10 +28,27 @@ type Medicine = {
     const [time, settime] = useState(new Date());
     const [period, setperiod] = useState("");
 
+
+    /*MED VAR*/ 
+    const [medname, setmedname] = useState("");
+    const [medamount, setmedamount] = useState("");
+    const [meddate, setmeddate] = useState<Date | null>(null);
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [medtime, setmedtime] = useState<Date | null>(null);
+    const [showTimePicker, setShowTimePicker] = useState(false);
+
+    const [defaultPickerDate] = useState(() => new Date());
+
+
+
     let gender_thai = (gender === "male") ? "ชาย" : "หญิง";
 
     const saveProfile = async (data: any) => {
       await AsyncStorage.setItem("userProfile", JSON.stringify(data));
+    };
+
+    const saveMedicines = async (data: Medicine[]) => {
+      await AsyncStorage.setItem("medicines", JSON.stringify(data));
     };
 
     const change_page = (newpage: string) => {
@@ -41,6 +59,7 @@ type Medicine = {
 
     useEffect(() => {
       loadProfile();
+      loadMedicines();
     }, []);
 
     useEffect(() => {
@@ -71,6 +90,13 @@ type Medicine = {
       }
     };
 
+    const loadMedicines = async () => {
+    const saved = await AsyncStorage.getItem("medicines");
+      if (saved) {
+        setMedicines(JSON.parse(saved));
+      }
+    };
+
     const profileImages = {
       male: require("../../assets/images/userblue.png"),
       female: require("../../assets/images/userpink.png"),
@@ -81,6 +107,7 @@ type Medicine = {
     };
 
     const [medicines, setMedicines] = useState<Medicine[]>([]);
+    
 
     const addMedicine = (newmed: Omit<Medicine, "id" | "checked">) => {
       const medicine: Medicine = {
@@ -88,21 +115,167 @@ type Medicine = {
         id: Date.now().toString(),
         checked: false,
       };
-      setMedicines((prev) => [...prev, medicine]);
+      setMedicines((prev) => {
+        const updated = [...prev, medicine];
+        saveMedicines(updated);   // save ทันทีหลังเพิ่ม
+        return updated;
+      });
     }
 
     const toggleCheck = (id: string) => {
-      setMedicines((prev) =>
-        prev.map((med) =>
+      setMedicines((prev) => {
+        const updated = prev.map((med) =>
           med.id === id ? { ...med, checked: !med.checked } : med
-        )
-      );
+        );
+        saveMedicines(updated);   // save ทันทีหลัง toggle
+        return updated;
+      });
     };
+
+    const saveMedicine = () => {
+      
+      if (medname.trim() === "") {
+        alert("กรุณากรอกชื่อยา");
+        return;
+      }
+
+      if (medname.length >= 20) {
+        alert("กรุณากรอกชื่อยาไม่เกิน 20 ตัวอักษร");
+        return;
+      }
+
+      // เช็คว่ากรอกจำนวนหรือยัง และต้องเป็นตัวเลข
+      if (medamount.trim() === "" || isNaN(Number(medamount))) {
+        alert("กรุณากรอกจำนวนยาเป็นตัวเลข");
+        return;
+      }
+
+      if (Number(medamount) <= 0 || Number(medamount) > 100) {
+        alert("กรุณากรอกจำนวนยาที่ถูกต้อง");
+        return;
+      }
+
+      if(meddate === null) {
+        alert("กรุณากรอกวันที่");
+        return;
+      }
+
+      if (medtime === null) {
+        alert("กรุณาเลือกเวลา");
+        return;
+      }
+
+      addMedicine({ 
+        name: medname, 
+        amount: medamount, 
+        time: medtime.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }),
+        day: meddate.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" })
+      });
+      setmedname("");
+      setmedamount("");
+      setexpage("");
+      setmeddate(null);
+      setmedtime(null)
+    };
+    
     
 
     return (
+
+
+
+
       <View style={styles.container}>
         <StatusBar style="dark" />
+
+        {expage === "addmed" && ( /*addmed*/
+          <>
+          <View style={styles.blackcon}>
+            <View style={styles.concard}>
+
+              <TouchableOpacity 
+                style={styles.closecon}
+                onPress={() => {
+                  setexpage("");
+                }}
+              >
+                <Image style={styles.medboxiconimg} source={require("../../assets/images/close.png")}></Image>
+              </TouchableOpacity>
+
+              <Text style={styles.conaddmedtext}>เพิ่มยา 💊✨</Text>
+
+              <Text style={styles.conlabel}>ชื่อยา</Text>
+              <TextInput
+                style={styles.coninput}
+                value={medname}
+                onChangeText={setmedname}
+                placeholder="กรอกชื่อยา"
+              />
+
+              <Text style={styles.conlabel}>จำนวนยาที่ทาน</Text>
+              <TextInput
+                style={styles.coninput}
+                value={medamount}
+                onChangeText={(text) => setmedamount(text.replace(/[^0-9]/g, ""))}  
+                placeholder="กรอกจำนวนยา"
+                keyboardType="numeric"
+              />
+              <Text style={styles.conlabel}>วันที่ทานยา</Text>
+              <TouchableOpacity 
+              style={styles.coninput} 
+              onPress={() => {setShowDatePicker(true)}}>
+                <Text>
+                  {meddate ? meddate.toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" }) : "แตะเพื่อเลือกวันที่"}
+                </Text>
+              </TouchableOpacity>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={meddate ?? defaultPickerDate}
+                  mode="date"
+                  display="default"
+                  onValueChange={(event, selectedDate) => {
+                    setShowDatePicker(false);
+                    if (selectedDate) setmeddate(selectedDate);
+                  }}
+                />
+              )}
+
+              <Text style={styles.conlabel}>เวลาทานยา</Text>
+              <TouchableOpacity style={styles.coninput} onPress={() => setShowTimePicker(true)}>
+                <Text>
+                  {medtime ? medtime.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" }) : "แตะเพื่อเลือกเวลา"}
+                </Text>
+              </TouchableOpacity>
+
+              {showTimePicker && (
+                <DateTimePicker
+                  value={medtime ?? defaultPickerDate}
+                  mode="time"
+                  display="default"
+                  is24Hour={true}
+                  onValueChange={(event, selectedTime) => {
+                    setShowTimePicker(false);
+                    if (selectedTime) setmedtime(selectedTime);
+                  }}
+                />
+              )}
+
+              <TouchableOpacity
+                style={styles.medsavebut}
+                onPress={saveMedicine}
+              >
+                <Text style={styles.medsavebuttext}>บันทึก</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          </>
+        )}
+
+
+
+
+
 
         <View style={styles.card}>
           <Text style={styles.title}>TIME MED</Text>
@@ -130,7 +303,7 @@ type Medicine = {
                     medicines.map((med) => (
                       <View key={med.id} style={styles.medbox}>
                         <Text style={styles.medboxname}>{med.name}</Text>
-                        <Text style={styles.medboxamount}>ทาน {med.amount}</Text>
+                        <Text style={styles.medboxamount}>ทาน {med.amount} เม็ด</Text>
                         <Text style={styles.medboxtime}>เวลา {med.time} น.</Text>
                         <Text style={styles.medboxday}>วันที่ {med.day}</Text>
 
@@ -148,6 +321,16 @@ type Medicine = {
                   )}
 
                 </ScrollView>
+
+                <TouchableOpacity 
+                  style={styles.addmed}
+                  onPress={() => {
+                    setEditingMedId(null);
+                    setexpage("addmed");
+                  }}
+                > 
+                  <Text style={styles.addmedtext}>+ เพิ่มยา</Text>
+                </TouchableOpacity>
               </>
             )}
             {page === "profile" && (
@@ -175,10 +358,6 @@ type Medicine = {
               </>
             )}
           </View>
-
-          <TouchableOpacity style={styles.addmed}>
-            <Text style={styles.addmedtext}>+ เพิ่มยา</Text>
-          </TouchableOpacity>
 
           <View style={styles.pagechange}>
             <TouchableOpacity
@@ -582,8 +761,8 @@ type Medicine = {
 
 
     addmed: {
-      width: 150,
-      height: 50,
+      width: 180,
+      height: 60,
       backgroundColor: "#d5ffb2",
 
       borderWidth: 2,
@@ -595,12 +774,104 @@ type Medicine = {
       alignItems: "center",
 
       position: "absolute",
-      left: 70,
-      bottom: 150
+      left: 100,
+      bottom: 100
     },
     addmedtext: {
       color: "#5a7747",
       fontSize: 20,
       fontWeight: 500,
+    },
+
+    blackcon: {
+      width: "111%",
+      height: "100%",
+      backgroundColor: "#00000070",
+      zIndex: 30,
+
+      justifyContent: 'center',
+      alignItems: "center",
+    },
+
+    concard: {
+      zIndex: 35,
+      width: 350,
+      height: 400,
+      backgroundColor: "#fff",
+      borderWidth: 1,
+      borderColor: "#000",
+
+      borderRadius: 15,
+
+      marginRight: "11%",
+
+      padding: 20,
+      paddingTop: 35,
+    },
+
+    closecon: {
+      width: 40,
+      height: 40,
+      backgroundColor: "#ffe8e8",
+      borderWidth: 1.5,
+      borderColor: "#833939",
+      borderRadius: 8,
+
+      position: 'absolute',
+      right: 10,
+      top: 10,
+
+      justifyContent: "center",
+      alignItems: "center"
+    },
+
+    conaddmedtext: {
+      color: "#000",
+      fontSize: 25,
+      fontWeight: 600,
+
+      position: "absolute",
+      top: 10,
+      left: 100,
+    },
+
+    conlabel: {
+      fontSize: 18,
+      marginBottom: 4,
+      marginTop: 12,
+      alignSelf: "flex-start",
+    },
+
+    coninput: {
+      width: "80%",
+      borderWidth: 1,
+      borderColor: "#ccc",
+      borderRadius: 8,
+      padding: 4,
+      fontSize: 16,
+    },
+
+    medsavebut: {
+      width: 80,
+      height: 40,
+      backgroundColor: "#d5ffb2",
+
+      borderWidth: 2,
+      borderColor: "#80aa73",
+
+      borderRadius: 10,
+
+      justifyContent: "center",
+      alignItems: "center",
+
+      position: "absolute",
+      right:10,
+      bottom:10,
+    },
+
+    medsavebuttext: {
+      color: "#5a7747",
+      fontSize: 14,
+      fontWeight: 600,
     }
   });
