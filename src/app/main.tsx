@@ -316,6 +316,7 @@ type Medicine = {
 
                   <TouchableOpacity style={styles.conbut} onPress={() => {
                     clearAllMedicines();
+                    setexpage("");
                   }}>
                     <Text style={styles.conbuttext}>ใช่</Text>
                   </TouchableOpacity>
@@ -335,6 +336,12 @@ type Medicine = {
             style={styles.ppkimg}
             source={require("../../assets/expo.icon/Assets/ppk.png")}
           />
+
+          <TouchableOpacity style={styles.goback} onPress={() => {
+            router.push("/")
+          }}>
+            <Image style={styles.medboxiconimg} source={require("../../assets/images/back.png")}></Image>
+          </TouchableOpacity>
 
           <View style={styles.page}>
             {page === "home" && (
@@ -461,7 +468,7 @@ type Medicine = {
       textAlign: "center",
       position: "absolute",
       top: 20,
-      left: 20,
+      left: 128,
       textShadowColor: "#000000",
       textShadowOffset: { width: 1, height: 1 },
       textShadowRadius: 1,
@@ -510,7 +517,7 @@ type Medicine = {
       height: 40,
       position: "absolute",
       top: 18,
-      left: 145,
+      right: 85,
       zIndex: 15,
       elevation: 50,
       shadowColor: "#ff0bb6",
@@ -664,7 +671,7 @@ type Medicine = {
       fontSize: 18,
       fontWeight: "bold",
       color: "#0c0c0c",
-      marginLeft: 25,
+      marginLeft: 130,
     },
     
     medsign: {
@@ -987,5 +994,21 @@ type Medicine = {
     conbuttext: {
       color: "#000",
       fontSize: 15
-    }
+    },
+
+    goback: {
+      backgroundColor: "#a3a3a365",
+      borderWidth: 1,
+      borderColor: "#5e5c5c65",
+      paddingVertical: 0,
+      width: 60,
+      paddingBlock: 5,
+      borderRadius: 20,
+      marginTop: 20,
+      alignSelf: "center",
+      alignItems: "center",
+      position: "absolute",
+      left: 5,
+      top: 1,
+    },
   });
