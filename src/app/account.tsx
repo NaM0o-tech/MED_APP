@@ -17,11 +17,15 @@ export default function account() {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
 
+  
+
   let welcome = "เข้าใช้งาน";
+  let time_med = "TIME MED";
 
   const { mode } = useLocalSearchParams();
   if (mode === "edit") {
     welcome = "แก้ไขข้อมูล";
+    time_med = "";
   }
 
   const isFormComplete =
@@ -84,8 +88,13 @@ export default function account() {
       return;
     }
 
-    const profile = { name, age, gender };
-    await AsyncStorage.setItem("userProfile", JSON.stringify(profile));
+    const existing = await AsyncStorage.getItem("userProfile"); //หาโปรไฟล์ทียังมีอยู่
+    const existingProfile = existing ? JSON.parse(existing) : {}; //ไปใส่ object ทับมา
+
+    const profile = { ...existingProfile, name, age, gender }; //ตั้งทับโปรไฟล์ใหม่ไม่ยุ่งกับ ค่าที่มีอยู่
+    await AsyncStorage.setItem("userProfile", JSON.stringify(profile));  //แปลงเป็น string ได้ข้อมุลมาเป็น {}
+
+
     router.push("/main");
 
     alert("บันทึกข้อมูลเรียบร้อยแล้ว");
@@ -95,7 +104,7 @@ export default function account() {
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
 
-      <Text style={styles.title}>TIME MED</Text>
+      <Text style={styles.title}>{time_med}</Text>
 
       <View style={styles.welcome}>
         <Text style={styles.textwelcome}>{welcome}</Text>
@@ -121,7 +130,7 @@ export default function account() {
         <TextInput
           style={styles.input}
           value={age}
-          onChangeText={setAge}
+          onChangeText={(text) => setAge(text.replace(/[^0-9]/g, ""))}
           placeholder="กรอกอายุ"
           keyboardType="numeric"
         />
