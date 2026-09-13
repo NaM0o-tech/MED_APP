@@ -195,7 +195,10 @@ type Medicine = {
       setmedtime(null)
     };
     
-    
+    const clearAllMedicines = async () => {
+      setMedicines([]);
+      await AsyncStorage.removeItem("medicines");
+    };
 
     return (
 
