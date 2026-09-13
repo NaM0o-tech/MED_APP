@@ -39,6 +39,15 @@ type Medicine = {
 
     const [defaultPickerDate] = useState(() => new Date());
 
+    const combineDateTime = (date: Date, time: Date): Date => {
+      const combined = new Date(date);
+      combined.setHours(time.getHours());
+      combined.setMinutes(time.getMinutes());
+      combined.setSeconds(0);
+      combined.setMilliseconds(0);
+      return combined;
+    };
+
 
 
     let gender_thai = (gender === "male") ? "ชาย" : "หญิง";
@@ -162,6 +171,14 @@ type Medicine = {
 
       if (medtime === null) {
         alert("กรุณาเลือกเวลา");
+        return;
+      }
+
+      const selectedDateTime = combineDateTime(meddate, medtime);
+      const now = new Date();
+
+      if (selectedDateTime < now) {
+        alert("กรุณาเลือกวันที่และเวลาที่ยังไม่ผ่านไป");
         return;
       }
 
