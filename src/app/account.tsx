@@ -17,8 +17,6 @@ export default function account() {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
 
-  
-
   let welcome = "เข้าใช้งาน";
   let time_med = "TIME MED";
 
@@ -39,7 +37,6 @@ export default function account() {
   };
 
   useEffect(() => {
-    //clearProfile();
     loadprofile();
     router.prefetch("/main");
   }, []);
@@ -92,8 +89,7 @@ export default function account() {
     const existingProfile = existing ? JSON.parse(existing) : {}; //ไปใส่ object ทับมา
 
     const profile = { ...existingProfile, name, age, gender }; //ตั้งทับโปรไฟล์ใหม่ไม่ยุ่งกับ ค่าที่มีอยู่
-    await AsyncStorage.setItem("userProfile", JSON.stringify(profile));  //แปลงเป็น string ได้ข้อมุลมาเป็น {}
-
+    await AsyncStorage.setItem("userProfile", JSON.stringify(profile)); //แปลงเป็น string ได้ข้อมุลมาเป็น {}
 
     router.push("/main");
 
