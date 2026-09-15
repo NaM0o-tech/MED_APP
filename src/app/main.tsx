@@ -15,6 +15,8 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
+const NOTIFICATION_ENABLE = false;
+
 import {
   cancelMedicineNotification,
   registerForNotificationsAsync,
@@ -27,6 +29,7 @@ type Medicine = {
   amount: string;
   time: string;
   day: string;
+  datetime: string;
   checked: boolean;
   notificationId?: string;
 };
@@ -80,7 +83,9 @@ export default function main() {
   useEffect(() => {
     loadProfile();
     loadMedicines();
-    registerForNotificationsAsync();
+    if (NOTIFICATION_ENABLE) {
+      registerForNotificationsAsync();
+    }
   }, []);
 
   useEffect(() => {
@@ -192,11 +197,9 @@ export default function main() {
       return;
     }
 
-    const notificationId = await scheduleMedicineNotification(
-      medname,
-      medamount,
-      selectedDateTime,
-    );
+    const notificationId = NOTIFICATION_ENABLE
+      ? await scheduleMedicineNotification(medname, medamount, selectedDateTime)
+      : undefined;
 
     addMedicine({
       name: medname,
@@ -210,6 +213,7 @@ export default function main() {
         month: "long",
         year: "numeric",
       }),
+      datetime: selectedDateTime.toISOString(),
       notificationId,
     });
 
@@ -221,9 +225,11 @@ export default function main() {
   };
 
   const clearAllMedicines = async () => {
-    await Promise.all(
-      medicines.map((med) => cancelMedicineNotification(med.notificationId)),
-    );
+    if (NOTIFICATION_ENABLE) {
+      await Promise.all(
+        medicines.map((med) => cancelMedicineNotification(med.notificationId)),
+      );
+    }
 
     setMedicines([]);
     await AsyncStorage.removeItem("medicines");
