@@ -15,6 +15,12 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
+import {
+  cancelMedicineNotification,
+  registerForNotificationsAsync,
+  scheduleMedicineNotification,
+} from "../utils/notifications";
+
 type Medicine = {
   id: string;
   name: string;
@@ -22,6 +28,7 @@ type Medicine = {
   time: string;
   day: string;
   checked: boolean;
+  notificationId?: string;
 };
 
 export default function main() {
@@ -73,6 +80,7 @@ export default function main() {
   useEffect(() => {
     loadProfile();
     loadMedicines();
+    registerForNotificationsAsync();
   }, []);
 
   useEffect(() => {
@@ -144,7 +152,7 @@ export default function main() {
     });
   };
 
-  const saveMedicine = () => {
+  const saveMedicine = async () => {
     if (medname.trim() === "") {
       alert("กรุณากรอกชื่อยา");
       return;
@@ -184,6 +192,12 @@ export default function main() {
       return;
     }
 
+    const notificationId = await scheduleMedicineNotification(
+      medname,
+      medamount,
+      selectedDateTime,
+    );
+
     addMedicine({
       name: medname,
       amount: medamount,
@@ -196,7 +210,9 @@ export default function main() {
         month: "long",
         year: "numeric",
       }),
+      notificationId,
     });
+
     setmedname("");
     setmedamount("");
     setexpage("");
@@ -205,6 +221,10 @@ export default function main() {
   };
 
   const clearAllMedicines = async () => {
+    await Promise.all(
+      medicines.map((med) => cancelMedicineNotification(med.notificationId)),
+    );
+
     setMedicines([]);
     await AsyncStorage.removeItem("medicines");
   };
@@ -272,7 +292,7 @@ export default function main() {
                   value={meddate ?? defaultPickerDate}
                   mode="date"
                   display="default"
-                  onValueChange={(event, selectedDate) => {
+                  onChange={(event, selectedDate) => {
                     setShowDatePicker(false);
                     if (selectedDate) setmeddate(selectedDate);
                   }}
@@ -300,7 +320,7 @@ export default function main() {
                   mode="time"
                   display="default"
                   is24Hour={true}
-                  onValueChange={(event, selectedTime) => {
+                  onChange={(event, selectedTime) => {
                     setShowTimePicker(false);
                     if (selectedTime) setmedtime(selectedTime);
                   }}
