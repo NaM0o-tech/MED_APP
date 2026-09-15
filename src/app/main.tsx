@@ -214,7 +214,7 @@ export default function main() {
         year: "numeric",
       }),
       datetime: selectedDateTime.toISOString(),
-      notificationId,
+      //notificationId,
     });
 
     setmedname("");
