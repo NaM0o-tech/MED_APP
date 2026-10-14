@@ -1,7 +1,12 @@
 //import { router } from 'expo-router';
 import { useEffect, useState } from "react";
+
+import DateTimePicker, {
+  DateTimePickerAndroid,
+} from "@react-native-community/datetimepicker";
 import {
   Image,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,9 +14,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 //import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import DateTimePicker from "@react-native-community/datetimepicker";
+
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
@@ -42,8 +48,9 @@ export default function main() {
 
   const [expage, setexpage] = useState("");
   const [editingMedId, setEditingMedId] = useState<string | null>(null);
+  const [deletingMedId, setDeletingMedId] = useState<string | null>(null);
 
-  const [time, settime] = useState(new Date());
+  //const [time, settime] = useState(new Date());
   const [period, setperiod] = useState("");
 
   /*MED VAR*/
@@ -55,6 +62,36 @@ export default function main() {
   const [showTimePicker, setShowTimePicker] = useState(false);
 
   const [defaultPickerDate] = useState(() => new Date());
+
+  const openDatePicker = () => {
+    if (Platform.OS === "android") {
+      DateTimePickerAndroid.open({
+        value: meddate ?? new Date(),
+        mode: "date",
+        minimumDate: new Date(),
+        onChange: (event, selectedDate) => {
+          if (event.type === "set" && selectedDate) setmeddate(selectedDate);
+        },
+      });
+    } else {
+      setShowDatePicker(true);
+    }
+  };
+
+  const openTimePicker = () => {
+    if (Platform.OS === "android") {
+      DateTimePickerAndroid.open({
+        value: medtime ?? new Date(),
+        mode: "time",
+        is24Hour: true,
+        onChange: (event, selectedTime) => {
+          if (event.type === "set" && selectedTime) setmedtime(selectedTime);
+        },
+      });
+    } else {
+      setShowTimePicker(true);
+    }
+  };
 
   const combineDateTime = (date: Date, time: Date): Date => {
     const combined = new Date(date);
@@ -89,19 +126,16 @@ export default function main() {
   }, []);
 
   useEffect(() => {
-    const timeinterval = setInterval(() => {
-      settime(new Date());
+    const updatePeriod = () => {
+      const h = new Date().getHours();
+      if (h >= 6 && h < 12) setperiod("สวัสดีตอนเช้า 🌄");
+      else if (h >= 12 && h < 18) setperiod("สวัสดีตอนบ่าย ☀️");
+      else setperiod("สวัสดีตอนเย็น 🌙");
+    };
 
-      if (time.getHours() >= 6 && time.getHours() < 12) {
-        setperiod("สวัสดีตอนเช้า 🌄");
-      } else if (time.getHours() >= 12 && time.getHours() < 18) {
-        setperiod("สวัสดีตอนบ่าย ☀️");
-      } else if (time.getHours() >= 18 && time.getHours() < 24) {
-        setperiod("สวัสดีตอนเย็น 🌙");
-      }
-    }, 1000);
-
-    return () => clearInterval(timeinterval);
+    updatePeriod();
+    const id = setInterval(updatePeriod, 60000); // เช็คทุก 1 นาทีพอ
+    return () => clearInterval(id);
   }, []);
 
   const loadProfile = async () => {
@@ -112,7 +146,7 @@ export default function main() {
       setAge(profile.age);
       setGender(profile.gender);
       setpage(profile.page || "home");
-      setperiod(profile.period);
+      //setperiod(profile.period);
     }
   };
 
@@ -157,6 +191,52 @@ export default function main() {
     });
   };
 
+  const updateMedicine = (
+    id: string,
+    newdata: Omit<Medicine, "id" | "checked">,
+  ) => {
+    setMedicines((prev) => {
+      const updated = prev.map((med) =>
+        med.id === id ? { ...med, ...newdata, checked: false } : med,
+      );
+      saveMedicines(updated);
+      return updated;
+    });
+  };
+
+  const closeMedModal = () => {
+    setexpage("");
+    setEditingMedId(null);
+    setDeletingMedId(null);
+    setmedname("");
+    setmedamount("");
+    setmeddate(null);
+    setmedtime(null);
+  };
+
+  const openEditMedicine = (med: Medicine) => {
+    const dt = new Date(med.datetime);
+    setEditingMedId(med.id);
+    setmedname(med.name);
+    setmedamount(med.amount);
+    setmeddate(dt);
+    setmedtime(dt);
+    setexpage("addmed");
+  };
+
+  const deleteMedicine = async (id: string) => {
+    const target = medicines.find((m) => m.id === id);
+    if (NOTIFICATION_ENABLE && target?.notificationId) {
+      await cancelMedicineNotification(target.notificationId);
+    }
+    setMedicines((prev) => {
+      const updated = prev.filter((m) => m.id !== id);
+      saveMedicines(updated);
+      return updated;
+    });
+    closeMedModal();
+  };
+
   const saveMedicine = async () => {
     if (medname.trim() === "") {
       alert("กรุณากรอกชื่อยา");
@@ -197,11 +277,21 @@ export default function main() {
       return;
     }
 
+    //--------------------------------------------------------------------------------------------------------
+
+    const oldMed = editingMedId
+      ? medicines.find((m) => m.id === editingMedId)
+      : undefined;
+
+    if (NOTIFICATION_ENABLE && oldMed?.notificationId) {
+      await cancelMedicineNotification(oldMed.notificationId);
+    }
+
     const notificationId = NOTIFICATION_ENABLE
       ? await scheduleMedicineNotification(medname, medamount, selectedDateTime)
       : undefined;
 
-    addMedicine({
+    const data = {
       name: medname,
       amount: medamount,
       time: medtime.toLocaleTimeString("th-TH", {
@@ -215,13 +305,15 @@ export default function main() {
       }),
       datetime: selectedDateTime.toISOString(),
       notificationId,
-    });
+    };
 
-    setmedname("");
-    setmedamount("");
-    setexpage("");
-    setmeddate(null);
-    setmedtime(null);
+    if (editingMedId) {
+      updateMedicine(editingMedId, data);
+    } else {
+      addMedicine(data);
+    }
+
+    closeMedModal();
   };
 
   const clearAllMedicines = async () => {
@@ -279,7 +371,7 @@ export default function main() {
               <TouchableOpacity
                 style={styles.coninput}
                 onPress={() => {
-                  setShowDatePicker(true);
+                  openDatePicker();
                 }}
               >
                 <Text>
@@ -293,7 +385,7 @@ export default function main() {
                 </Text>
               </TouchableOpacity>
 
-              {showDatePicker && (
+              {showDatePicker && Platform.OS !== "android" && (
                 <DateTimePicker
                   value={meddate ?? defaultPickerDate}
                   mode="date"
@@ -308,7 +400,7 @@ export default function main() {
               <Text style={styles.conlabel}>เวลาทานยา</Text>
               <TouchableOpacity
                 style={styles.coninput}
-                onPress={() => setShowTimePicker(true)}
+                onPress={() => openTimePicker()}
               >
                 <Text>
                   {medtime
@@ -320,7 +412,7 @@ export default function main() {
                 </Text>
               </TouchableOpacity>
 
-              {showTimePicker && (
+              {showTimePicker && Platform.OS !== "android" && (
                 <DateTimePicker
                   value={medtime ?? defaultPickerDate}
                   mode="time"
@@ -385,6 +477,43 @@ export default function main() {
         </>
       )}
 
+      {expage === "delonemed" && (
+        <>
+          <View style={styles.blackcon}>
+            <View style={styles.concard}>
+              <TouchableOpacity style={styles.closecon} onPress={closeMedModal}>
+                <Image
+                  style={styles.medboxiconimg}
+                  source={require("../../assets/images/close.png")}
+                ></Image>
+              </TouchableOpacity>
+
+              <Text style={styles.areyousure}>ลบยานี้ใช่หรือไม่?</Text>
+
+              <TouchableOpacity
+                style={styles.conbut}
+                onPress={() => {
+                  // ไม่ลบ: กลับไปหน้าแก้ไขเดิม
+                  setDeletingMedId(null);
+                  setexpage("addmed");
+                }}
+              >
+                <Text style={styles.conbuttext}>ไม่</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.conbut}
+                onPress={() => {
+                  if (deletingMedId) deleteMedicine(deletingMedId);
+                }}
+              >
+                <Text style={styles.conbuttext}>ใช่</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </>
+      )}
+
       <View style={styles.card}>
         <Text style={styles.title}>TIME MED</Text>
         <Image
@@ -429,7 +558,10 @@ export default function main() {
                       <Text style={styles.medboxtime}>เวลา {med.time} น.</Text>
                       <Text style={styles.medboxday}>วันที่ {med.day}</Text>
 
-                      <TouchableOpacity style={styles.medconfigbut}>
+                      <TouchableOpacity
+                        style={styles.medconfigbut}
+                        onPress={() => openEditMedicine(med)}
+                      >
                         <Image
                           style={styles.medboxiconimg}
                           source={require("../../assets/images/setting.png")}
@@ -446,6 +578,18 @@ export default function main() {
                         <Image
                           style={styles.medboxiconimg}
                           source={require("../../assets/images/check-mark.png")}
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.meddeletebut}
+                        onPress={() => {
+                          setDeletingMedId(med.id);
+                          setexpage("delonemed");
+                        }}
+                      >
+                        <Image
+                          style={styles.medboxiconimgmini}
+                          source={require("../../assets/images/trashcan.png")}
                         />
                       </TouchableOpacity>
                     </View>
@@ -882,9 +1026,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+  meddeletebut: {
+    width: 30,
+    height: 30,
+    backgroundColor: "#d0a1a1",
+    borderWidth: 1.5,
+    borderColor: "#a77f7f",
+    borderRadius: 8,
+
+    position: "absolute",
+    right: 110,
+    bottom: 10,
+
+    justifyContent: "center",
+    alignItems: "center",
+  },
   medboxiconimg: {
     width: 30,
     height: 30,
+  },
+
+  medboxiconimgmini: {
+    width: 20,
+    height: 20,
   },
 
   noyet: {

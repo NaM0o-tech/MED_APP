@@ -1,10 +1,15 @@
-import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
 const NOTIFICATION_ENABLE = false; // ต้องตรงกับค่าใน main.tsx
 
+// โหลด expo-notifications เฉพาะตอนเปิดใช้งานเท่านั้น
+// (กัน error บน Expo Go ที่ SDK 53+ ไม่รองรับ push notification)
+let Notifications: typeof import("expo-notifications") | null = null;
+
 if (NOTIFICATION_ENABLE) {
-  Notifications.setNotificationHandler({
+  Notifications = require("expo-notifications");
+
+  Notifications!.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowAlert: true,
       shouldPlaySound: true,
@@ -16,7 +21,7 @@ if (NOTIFICATION_ENABLE) {
 }
 
 export async function registerForNotificationsAsync() {
-  if (!NOTIFICATION_ENABLE) return false;
+  if (!NOTIFICATION_ENABLE || !Notifications) return false;
 
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
@@ -47,7 +52,7 @@ export async function scheduleMedicineNotification(
   amount: string,
   dateTime: Date,
 ) {
-  if (!NOTIFICATION_ENABLE) return undefined;
+  if (!NOTIFICATION_ENABLE || !Notifications) return undefined;
 
   const id = await Notifications.scheduleNotificationAsync({
     content: {
@@ -65,6 +70,6 @@ export async function scheduleMedicineNotification(
 }
 
 export async function cancelMedicineNotification(notificationId?: string) {
-  if (!NOTIFICATION_ENABLE || !notificationId) return;
+  if (!NOTIFICATION_ENABLE || !Notifications || !notificationId) return;
   await Notifications.cancelScheduledNotificationAsync(notificationId);
 }
