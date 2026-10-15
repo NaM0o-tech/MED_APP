@@ -21,7 +21,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
-const NOTIFICATION_ENABLE = false;
+const NOTIFICATION_ENABLE = true;
 
 import {
   cancelMedicineNotification,

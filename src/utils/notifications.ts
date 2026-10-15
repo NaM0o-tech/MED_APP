@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 
-const NOTIFICATION_ENABLE = false; // ต้องตรงกับค่าใน main.tsx
+const NOTIFICATION_ENABLE = true; // ต้องตรงกับค่าใน main.tsx
 
 // โหลด expo-notifications เฉพาะตอนเปิดใช้งานเท่านั้น
 // (กัน error บน Expo Go ที่ SDK 53+ ไม่รองรับ push notification)

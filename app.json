@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "MED_APP",
-    "slug": "MED_APP",
+    "name": "Time Med",
+    "slug": "time-med",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/time_med.png",
     "scheme": "medapp",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -35,7 +35,8 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
