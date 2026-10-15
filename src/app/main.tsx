@@ -1,6 +1,8 @@
 //import { router } from 'expo-router';
 import { useEffect, useState } from "react";
 
+//build BUNDLE GET APK APP --> eas build --platform android --profile preview
+
 import DateTimePicker, {
   DateTimePickerAndroid,
 } from "@react-native-community/datetimepicker";
