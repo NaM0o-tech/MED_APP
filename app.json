@@ -16,7 +16,7 @@
         "foregroundImage": "./assets/images/time_med.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.MED_APP"
+      "package": "com.namo.timemed"
     },
     "web": {
       "output": "static",
