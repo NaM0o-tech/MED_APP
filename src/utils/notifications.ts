@@ -27,7 +27,6 @@ export async function registerForNotificationsAsync() {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
       importance: Notifications.AndroidImportance.HIGH,
-      sound: "default",
     });
   }
 
@@ -58,7 +57,7 @@ export async function scheduleMedicineNotification(
     content: {
       title: "ถึงเวลาทานยาแล้ว 💊",
       body: `ทาน ${name} จำนวน ${amount} เม็ด`,
-      sound: "default",
+      sound: true,
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
