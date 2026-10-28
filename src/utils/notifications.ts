@@ -2,6 +2,9 @@ import { Platform } from "react-native";
 
 const NOTIFICATION_ENABLE = true; // ต้องตรงกับค่าใน main.tsx
 
+const CHANNEL_ID = "med";
+const SOUND = "med_alert.wav";
+
 // โหลด expo-notifications เฉพาะตอนเปิดใช้งานเท่านั้น
 // (กัน error บน Expo Go ที่ SDK 53+ ไม่รองรับ push notification)
 let Notifications: typeof import("expo-notifications") | null = null;
@@ -24,9 +27,10 @@ export async function registerForNotificationsAsync() {
   if (!NOTIFICATION_ENABLE || !Notifications) return false;
 
   if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.HIGH,
+    await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
+      name: "Medicine",
+      importance: Notifications.AndroidImportance.MAX,
+      sound: SOUND,
     });
   }
 
@@ -57,11 +61,12 @@ export async function scheduleMedicineNotification(
     content: {
       title: "ถึงเวลาทานยาแล้ว 💊",
       body: `ทาน ${name} จำนวน ${amount} เม็ด`,
-      sound: true,
+      sound: SOUND,
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
       date: dateTime,
+      channelId: CHANNEL_ID,
     },
   });
 

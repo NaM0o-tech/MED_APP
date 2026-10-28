@@ -23,6 +23,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
+import * as Speech from "expo-speech";
+
 const NOTIFICATION_ENABLE = true;
 
 import {
@@ -327,6 +329,13 @@ export default function main() {
 
     setMedicines([]);
     await AsyncStorage.removeItem("medicines");
+  };
+
+  const speakMedicine = (m: Medicine) => {
+    Speech.speak(`ถึงเวลาทานยา ${m.name} จำนวน ${m.amount} เม็ด`, {
+      language: "th-TH",
+      rate: 0.9,
+    });
   };
 
   return (
