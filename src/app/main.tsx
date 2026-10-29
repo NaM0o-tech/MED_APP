@@ -8,6 +8,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import {
   Image,
+  Modal,
   Platform,
   ScrollView,
   StyleSheet,
@@ -36,6 +37,7 @@ import {
 type Medicine = {
   id: string;
   name: string;
+  type: string;
   amount: string;
   time: string;
   day: string;
@@ -44,6 +46,18 @@ type Medicine = {
   notificationId?: string;
 };
 
+const MED_TYPE = [
+  "ยาแก้ปวดลดไข้ / พาราเซตามอล",
+  "ยาแก้อักเสบ",
+  "ยาปฏิชีวนะ",
+  "ยาแก้แพ้",
+  "ยาแก้ไอ",
+  "ยาลดกรด",
+  "ยาลดความดันโลหิต",
+  "ยารักษาโรคเบาหวาน",
+  "ยาลดไขมันในเลือด",
+  "ยาระบาย",
+];
 export default function main() {
   const [name, Setname] = useState("");
   const [age, setAge] = useState("");
@@ -59,6 +73,8 @@ export default function main() {
 
   /*MED VAR*/
   const [medname, setmedname] = useState("");
+  const [medtype, setmedtype] = useState("");
+  const [showTypePicker, setShowTypePicker] = useState(false);
   const [medamount, setmedamount] = useState("");
   const [meddate, setmeddate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -214,7 +230,9 @@ export default function main() {
     setexpage("");
     setEditingMedId(null);
     setDeletingMedId(null);
+    setShowTypePicker(false);
     setmedname("");
+    setmedtype("");
     setmedamount("");
     setmeddate(null);
     setmedtime(null);
@@ -224,6 +242,7 @@ export default function main() {
     const dt = new Date(med.datetime);
     setEditingMedId(med.id);
     setmedname(med.name);
+    setmedtype(med.type);
     setmedamount(med.amount);
     setmeddate(dt);
     setmedtime(dt);
@@ -297,11 +316,17 @@ export default function main() {
     }
 
     const notificationId = NOTIFICATION_ENABLE
-      ? await scheduleMedicineNotification(medname, medamount, selectedDateTime)
+      ? await scheduleMedicineNotification(
+          medname,
+          medtype,
+          medamount,
+          selectedDateTime,
+        )
       : undefined;
 
     const data = {
       name: medname,
+      type: medtype,
       amount: medamount,
       time: medtime.toLocaleTimeString("th-TH", {
         hour: "2-digit",
@@ -372,6 +397,53 @@ export default function main() {
                 onChangeText={setmedname}
                 placeholder="กรอกชื่อยา"
               />
+
+              <Text style={styles.conlabel}>ชนิดของยา</Text>
+              <TouchableOpacity
+                style={styles.coninput}
+                onPress={() => setShowTypePicker(true)}
+              >
+                <Text style={{ color: medtype ? "#000" : "#888" }}>
+                  {medtype ? medtype : "แตะเพื่อเลือกชนิดของยา"}
+                </Text>
+              </TouchableOpacity>
+
+              <Modal
+                visible={showTypePicker}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setShowTypePicker(false)}
+              >
+                <View style={styles.typeOverlay}>
+                  {/* แตะพื้นหลังเพื่อปิด */}
+                  <TouchableOpacity
+                    style={StyleSheet.absoluteFill}
+                    activeOpacity={1}
+                    onPress={() => setShowTypePicker(false)}
+                  />
+
+                  <View style={styles.typeModalBox}>
+                    <Text style={styles.typeModalTitle}>เลือกชนิดของยา</Text>
+                    <ScrollView style={styles.typeScroll}>
+                      {MED_TYPE.map((t) => (
+                        <TouchableOpacity
+                          key={t}
+                          style={[
+                            styles.typeOption,
+                            medtype === t && styles.typeOptionSelected,
+                          ]}
+                          onPress={() => {
+                            setmedtype(t);
+                            setShowTypePicker(false);
+                          }}
+                        >
+                          <Text style={styles.typeOptionText}>{t}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                </View>
+              </Modal>
 
               <Text style={styles.conlabel}>จำนวนยาที่ทาน</Text>
               <TextInput
@@ -570,6 +642,9 @@ export default function main() {
                       <Text style={styles.medboxname}>{med.name}</Text>
                       <Text style={styles.medboxamount}>
                         ทาน {med.amount} เม็ด
+                      </Text>
+                      <Text style={styles.medtypetext}>
+                        {"•"} {med.type}
                       </Text>
                       <Text style={styles.medboxtime}>เวลา {med.time} น.</Text>
                       <Text style={styles.medboxday}>วันที่ {med.day}</Text>
@@ -951,7 +1026,7 @@ const styles = StyleSheet.create({
 
   medbox: {
     width: "90%",
-    height: 90,
+    height: 105,
     backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#000",
@@ -978,6 +1053,16 @@ const styles = StyleSheet.create({
     right: 10,
     top: 5,
   },
+  medtypetext: {
+    color: "#000",
+    fontSize: 12,
+    fontWeight: 400,
+
+    position: "absolute",
+    left: 25,
+    top: 33,
+  },
+
   medboxtime: {
     color: "#00000086",
     fontSize: 13,
@@ -985,7 +1070,7 @@ const styles = StyleSheet.create({
 
     position: "absolute",
     left: 25,
-    top: 25,
+    bottom: 20,
   },
   medboxday: {
     color: "#0000009f",
@@ -1007,7 +1092,7 @@ const styles = StyleSheet.create({
 
     position: "absolute",
     right: 60,
-    bottom: 10,
+    bottom: 5,
 
     justifyContent: "center",
     alignItems: "center",
@@ -1023,7 +1108,7 @@ const styles = StyleSheet.create({
 
     position: "absolute",
     right: 10,
-    bottom: 10,
+    bottom: 5,
 
     justifyContent: "center",
     alignItems: "center",
@@ -1039,7 +1124,7 @@ const styles = StyleSheet.create({
 
     position: "absolute",
     right: 10,
-    bottom: 10,
+    bottom: 5,
 
     justifyContent: "center",
     alignItems: "center",
@@ -1055,7 +1140,7 @@ const styles = StyleSheet.create({
 
     position: "absolute",
     right: 110,
-    bottom: 10,
+    bottom: 5,
 
     justifyContent: "center",
     alignItems: "center",
@@ -1115,7 +1200,7 @@ const styles = StyleSheet.create({
   concard: {
     zIndex: 35,
     width: 350,
-    height: 400,
+    height: 500,
     backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#000",
@@ -1168,6 +1253,49 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 4,
     fontSize: 16,
+  },
+
+  typeOverlay: {
+    flex: 1,
+    backgroundColor: "#00000070",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  typeModalBox: {
+    width: 300,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#000",
+    borderRadius: 15,
+    padding: 15,
+  },
+
+  typeModalTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 10,
+  },
+
+  typeScroll: {
+    maxHeight: 300,
+  },
+
+  typeOption: {
+    paddingVertical: 8,
+    paddingHorizontal: 13,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#eee",
+  },
+
+  typeOptionSelected: {
+    backgroundColor: "#edc6ff",
+  },
+
+  typeOptionText: {
+    fontSize: 16,
+    color: "#000",
   },
 
   medsavebut: {

@@ -52,6 +52,7 @@ export async function registerForNotificationsAsync() {
 
 export async function scheduleMedicineNotification(
   name: string,
+  type: string,
   amount: string,
   dateTime: Date,
 ) {
@@ -60,7 +61,7 @@ export async function scheduleMedicineNotification(
   const id = await Notifications.scheduleNotificationAsync({
     content: {
       title: "ถึงเวลาทานยาแล้ว 💊",
-      body: `ทาน ${name} จำนวน ${amount} เม็ด`,
+      body: `ทาน ${name} (${type}) จำนวน ${amount} เม็ด`,
       sound: SOUND,
     },
     trigger: {
