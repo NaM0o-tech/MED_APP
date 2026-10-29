@@ -61,7 +61,7 @@ export async function scheduleMedicineNotification(
   const id = await Notifications.scheduleNotificationAsync({
     content: {
       title: "ถึงเวลาทานยาแล้ว 💊",
-      body: `ทาน ${name} (${type}) จำนวน ${amount} เม็ด`,
+      body: `${type} - ${name}  จำนวน ${amount} เม็ด`,
       sound: SOUND,
     },
     trigger: {
