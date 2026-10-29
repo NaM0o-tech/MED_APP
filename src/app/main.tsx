@@ -1,5 +1,5 @@
 //import { router } from 'expo-router';
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 //build BUNDLE GET APK APP --> eas build --platform android --profile preview
 
@@ -21,7 +21,7 @@ import {
 //import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 import * as Speech from "expo-speech";
@@ -43,7 +43,7 @@ type Medicine = {
   day: string;
   datetime: string;
   checked: boolean;
-  notificationId?: string;
+  notificationId?: string | string[];
 };
 
 const MED_TYPE = [
@@ -140,12 +140,17 @@ export default function main() {
   };
 
   useEffect(() => {
-    loadProfile();
-    loadMedicines();
     if (NOTIFICATION_ENABLE) {
       registerForNotificationsAsync();
     }
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadProfile();
+      loadMedicines();
+    }, []),
+  );
 
   useEffect(() => {
     const updatePeriod = () => {
@@ -204,9 +209,20 @@ export default function main() {
   };
 
   const toggleCheck = (id: string) => {
+    const target = medicines.find((m) => m.id === id);
+    if (NOTIFICATION_ENABLE && target && !target.checked) {
+      cancelMedicineNotification(target.notificationId);
+    }
+
     setMedicines((prev) => {
       const updated = prev.map((med) =>
-        med.id === id ? { ...med, checked: !med.checked } : med,
+        med.id === id
+          ? {
+              ...med,
+              checked: !med.checked,
+              notificationId: med.checked ? med.notificationId : undefined, // ถ้าเช็คแล้วให้ลบ notificationId
+            }
+          : med,
       );
       saveMedicines(updated); // save ทันทีหลัง toggle
       return updated;
@@ -388,7 +404,9 @@ export default function main() {
                 ></Image>
               </TouchableOpacity>
 
-              <Text style={styles.conaddmedtext}>เพิ่มยา 💊✨</Text>
+              <Text style={styles.conaddmedtext}>
+                {editingMedId ? "แก้ไขยา 💊⚙️" : "เพิ่มยา 💊✨"}
+              </Text>
 
               <Text style={styles.conlabel}>ชื่อยา</Text>
               <TextInput
@@ -692,6 +710,7 @@ export default function main() {
                 style={styles.addmed}
                 onPress={() => {
                   setEditingMedId(null);
+                  setaddmedhead("เพิ่มยา 💊✨");
                   setexpage("addmed");
                 }}
               >

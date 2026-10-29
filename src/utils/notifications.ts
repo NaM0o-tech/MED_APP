@@ -9,6 +9,8 @@ const SOUND = "med_alert.wav";
 // (กัน error บน Expo Go ที่ SDK 53+ ไม่รองรับ push notification)
 let Notifications: typeof import("expo-notifications") | null = null;
 
+const REPEAT_MINUTES = [0, 5, 10, 15, 20, 25];
+
 if (NOTIFICATION_ENABLE) {
   Notifications = require("expo-notifications");
 
@@ -54,27 +56,46 @@ export async function scheduleMedicineNotification(
   name: string,
   type: string,
   amount: string,
-  dateTime: Date,
-) {
-  if (!NOTIFICATION_ENABLE || !Notifications) return undefined;
+  date: Date,
+): Promise<string[]> {
+  if (!NOTIFICATION_ENABLE || !Notifications) return [];
 
-  const id = await Notifications.scheduleNotificationAsync({
-    content: {
-      title: "ถึงเวลาทานยาแล้ว 💊",
-      body: `${type} - ${name}  จำนวน ${amount} เม็ด`,
-      sound: SOUND,
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DATE,
-      date: dateTime,
-      channelId: CHANNEL_ID,
-    },
-  });
+  const ids: string[] = [];
 
-  return id;
+  for (let i = 0; i < REPEAT_MINUTES.length; i++) {
+    const when = new Date(date.getTime() + REPEAT_MINUTES[i] * 60 * 1000);
+
+    const id = await Notifications.scheduleNotificationAsync({
+      content: {
+        title:
+          i === 0
+            ? "ถึงเวลาทานยา 💊"
+            : `อย่าลืมทานยา 💊 (เตือนซ้ำครั้งที่ ${i}) ⏰`,
+        body: `${name} (${type}) จำนวน ${amount} เม็ด`,
+        sound: SOUND,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: when,
+        channelId: CHANNEL_ID,
+      },
+    });
+    ids.push(id);
+  }
+
+  return ids;
 }
 
-export async function cancelMedicineNotification(notificationId?: string) {
-  if (!NOTIFICATION_ENABLE || !Notifications || !notificationId) return;
-  await Notifications.cancelScheduledNotificationAsync(notificationId);
+export async function cancelMedicineNotification(
+  notificationIds?: string | string[],
+) {
+  if (!NOTIFICATION_ENABLE || !Notifications || !notificationIds) return;
+
+  const list = Array.isArray(notificationIds)
+    ? notificationIds
+    : [notificationIds];
+
+  await Promise.all(
+    list.map((id) => Notifications!.cancelScheduledNotificationAsync(id)),
+  );
 }
