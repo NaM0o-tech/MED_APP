@@ -4,12 +4,33 @@ import { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 export default function HomeScreen() {
   //hello this med app
+  const [message, setmessage] = useState("เริ่มต้นการใช้งาน!");
 
-  //"hello my shella sigma toilet"
+  const [Page, setPage] = useState("account");
 
-  const [message, setmessage] = useState("เริ่มต้นการใช้งาน");
+  const Load_Profile = async () => {
+    const saved = await AsyncStorage.getItem("userProfile");
+    if (saved) {
+      const profile = JSON.parse(saved);
+      setmessage("เข้าใช้งานต่อ");
+      setPage("main");
+    } else {
+      setmessage("เริ่มต้นการใช้งาน");
+    }
+  };
+  Load_Profile();
+
+  function Gopage() {
+    if (Page === "account") {
+      router.push("/account");
+    } else {
+      router.push("/main");
+    }
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -37,7 +58,7 @@ export default function HomeScreen() {
         <TouchableOpacity
           style={styles.button}
           activeOpacity={0.4}
-          onPress={() => router.push("/account")}
+          onPress={Gopage}
         >
           <Text style={styles.buttonText}>{message}</Text>
         </TouchableOpacity>

@@ -67,6 +67,8 @@ export default function main() {
 
   const [defaultPickerDate] = useState(() => new Date());
 
+  const [addmedhead, setaddmedhead] = useState("เพิ่มยา 💊✨");
+
   const openDatePicker = () => {
     if (Platform.OS === "android") {
       DateTimePickerAndroid.open({
@@ -225,6 +227,9 @@ export default function main() {
     setmedamount(med.amount);
     setmeddate(dt);
     setmedtime(dt);
+
+    setaddmedhead("แก้ไขยา 💊⚙️");
+
     setexpage("addmed");
   };
 
@@ -622,6 +627,9 @@ export default function main() {
                 style={styles.delmed}
                 onPress={() => {
                   setEditingMedId(null);
+
+                  setaddmedhead("เพิ่มยา 💊✨");
+
                   setexpage("delmed");
                 }}
               >
